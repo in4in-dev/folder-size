@@ -70,3 +70,42 @@ macos/build/FinderSizes.app/Contents/MacOS/FinderSizes --scan ~/Downloads
 ## Windows
 
 ![Size panel next to a File Explorer window](windows/screenshots/panel.png)
+
+A panel appears to the right of the active File Explorer window. It moves and resizes together with the window, follows you when you switch to another Explorer window and never takes focus away from Explorer.
+
+- **Double-click** opens a folder in the same Explorer window, or a file in its app; the `..` row goes up a level.
+- **Right-click** shows the regular Explorer context menu for the item, plus **Open in new window**, **Recalculate size** and **Copy path**.
+- **By size / By name** switches the sort order. In **This PC** the panel lists drives with their used and total space.
+- A spinner next to a row means the folder is still being counted. The footer shows free space on the current drive.
+- Drag the panel's outer edge to change its width; the arrow button in the header collapses it to a thin strip.
+- When there is no room next to a maximized window, the panel is laid over the window's edge, below the command bar.
+- The interface follows the system language: English and Russian are supported.
+
+### Installation
+
+1. Download [FolderSizePanel-Setup-0.2.exe](https://github.com/in4in-dev/folder-size/releases/download/windows-v0.2/FolderSizePanel-Setup-0.2.exe) from [Releases](https://github.com/in4in-dev/folder-size/releases).
+2. Run it. No administrator rights are needed: the app is installed into `%LOCALAPPDATA%\Programs\FolderSizePanel`, gets a Start menu shortcut and an entry in **Settings → Apps → Installed apps**, where it can be uninstalled.
+3. The installer is not signed, so Windows SmartScreen may warn you on first launch: click **More info → Run anyway**.
+
+The app lives in the notification area (system tray); right-click its icon to show or hide the panel, put it on the left or right side of the window, clear the size cache or exit. On first launch it adds itself to startup (a Task Scheduler task at sign-in); you can turn this off with **Start with Windows** in the same menu.
+
+### Building from source
+
+Requires only Windows 10/11: the build uses the C# compiler from .NET Framework 4.x that ships with the system.
+
+```powershell
+cd windows
+.\build.ps1                 # build bin\FolderSizePanel.exe and the bin\FolderSizePanel-Setup.exe installer
+.\build.ps1 -Install        # build, install into %LOCALAPPDATA%\Programs\FolderSizePanel and launch
+.\build.ps1 -Version 0.3    # set the version shown in file properties and Installed apps
+```
+
+Releases are built by GitHub Actions: pushing a `windows-v<version>` tag (for example `windows-v0.3`) builds the installer and attaches it to a new release.
+
+To check the other interface language without changing the system one, set `FOLDERSIZE_LANG=en` or `FOLDERSIZE_LANG=ru` before launching the app.
+
+Counting without the UI, e.g. to check speed:
+
+```powershell
+windows\bin\bench.exe --bench C:\Windows
+```
