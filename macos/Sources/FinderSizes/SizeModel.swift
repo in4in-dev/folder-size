@@ -1,13 +1,13 @@
 import AppKit
 
-/// Состояние панели: текущая папка, её элементы с размерами, выделение.
-/// Живёт на главном потоке.
+/// Panel state: the current folder, its items with sizes, the selection.
+/// Lives on the main thread.
 final class SizeModel: ObservableObject {
     struct Item: Identifiable {
-        /// Путь без завершающего «/».
+        /// Path without a trailing "/".
         let id: String
         let name: String
-        /// Обычная папка — открывается в Finder. Пакеты (.app и т.п.) открываются как файлы.
+        /// A regular folder opens in Finder. Packages (.app etc.) open like files.
         let isFolder: Bool
         let bytes: Int64
         let computing: Bool
@@ -19,7 +19,7 @@ final class SizeModel: ObservableObject {
     @Published private(set) var isComputing = false
     @Published var selection: Set<String> = []
 
-    /// Поменялось число строк — панели нужна другая высота.
+    /// The number of rows changed, so the panel needs a different height.
     var onLayoutChange: (() -> Void)?
 
     var folderName: String { folder.map { FileManager.default.displayName(atPath: $0.path) } ?? "" }
@@ -29,11 +29,11 @@ final class SizeModel: ObservableObject {
 
     private var scan: FolderScan?
     private var timer: Timer?
-    /// Готовые размеры подпапок: путь → размер. Сбрасывается по событиям FSEvents.
+    /// Computed subfolder sizes: path → size. Invalidated by FSEvents.
     private var cache: [String: CachedSize] = [:]
-    /// Индекс → поколение, для которого результат уже положен в кеш.
+    /// Index → generation whose result is already cached.
     private var recorded: [Int: Int] = [:]
-    /// Последний досчитанный размер — показываем его, пока подпапка пересчитывается.
+    /// Last completed size, shown while the subfolder is being recounted.
     private var stable: [Int: Int64] = [:]
     private var icons: [String: NSImage] = [:]
 
@@ -44,7 +44,7 @@ final class SizeModel: ObservableObject {
 
     func show(folder url: URL) {
         guard url.path != folder?.path else { return }
-        scan?.cancel()  // ушли из папки — её подсчёт больше не нужен
+        scan?.cancel()  // left the folder, its count is no longer needed
         folder = url
         items = []
         selection = []
@@ -69,7 +69,7 @@ final class SizeModel: ObservableObject {
         return image
     }
 
-    // MARK: - Подсчёт
+    // MARK: - Counting
 
     private func startScan() {
         guard let folder else { return }
@@ -134,7 +134,7 @@ final class SizeModel: ObservableObject {
         timer = nil
     }
 
-    // MARK: - Изменения на диске
+    // MARK: - Disk changes
 
     func filesChanged(_ paths: [String]) {
         let changed = paths.map { $0.hasSuffix("/") ? $0 : $0 + "/" }
@@ -168,7 +168,7 @@ final class SizeModel: ObservableObject {
             relistNeeded = false
             let now = (try? FileManager.default.contentsOfDirectory(at: s.folder, includingPropertiesForKeys: nil, options: [.skipsHiddenFiles])) ?? []
             if Set(now.map(\.lastPathComponent)) != Set(s.entries.map { $0.url.lastPathComponent }) {
-                // Появились или пропали элементы — перечитываем папку, готовые подпапки берутся из кеша.
+                // Items appeared or disappeared: re-read the folder, completed subfolders come from the cache.
                 s.cancel()
                 startScan()
                 return
@@ -179,7 +179,7 @@ final class SizeModel: ObservableObject {
         let p = s.snapshot()
         var later = Set<Int>()
         for i in dirty {
-            // Ещё считается — изменения попадут в текущий обход.
+            // Still counting: the changes will be picked up by the current walk.
             guard p.pending[i] == 0 else { continue }
             if let last = lastRescan[i], Date().timeIntervalSince(last) < 10 {
                 later.insert(i)

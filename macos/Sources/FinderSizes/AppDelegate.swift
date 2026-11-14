@@ -7,18 +7,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         LoginItem.enableOnFirstLaunch()
-        // Покажет системный запрос на Универсальный доступ, если его ещё нет.
+        // Shows the system Accessibility prompt if access has not been granted yet.
         let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
         _ = AXIsProcessTrustedWithOptions(options)
         coordinator.start()
     }
 }
 
-/// Автозапуск при входе в систему (Настройки → Основные → Объекты входа).
+/// Launch at login (System Settings → General → Login Items).
 enum LoginItem {
     private static let configuredKey = "loginItemConfigured"
 
-    /// Включает автозапуск один раз; если потом выключить его в «Объектах входа», приложение не вернёт.
+    /// Enables launch at login once; if the user later turns it off in Login Items, the app won't turn it back on.
     static func enableOnFirstLaunch() {
         let defaults = UserDefaults.standard
         guard !defaults.bool(forKey: configuredKey) else { return }
@@ -26,7 +26,7 @@ enum LoginItem {
         do {
             try SMAppService.mainApp.register()
         } catch {
-            NSLog("FinderSizes: не удалось включить автозапуск: %@", error.localizedDescription)
+            NSLog("FinderSizes: failed to enable launch at login: %@", error.localizedDescription)
         }
     }
 }

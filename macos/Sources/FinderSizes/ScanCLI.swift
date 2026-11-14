@@ -1,6 +1,6 @@
 import Foundation
 
-/// `FinderSizes --scan <папка>`: тот же подсчёт, что и в панели, но с выводом в терминал.
+/// `FinderSizes --scan <folder>`: the same counting as in the panel, printed to the terminal.
 enum ScanCLI {
     static func run(path: String) -> Never {
         let started = Date()
@@ -13,11 +13,11 @@ enum ScanCLI {
                 let elapsed = Date().timeIntervalSince(started)
                 for i in scan.entries.indices.sorted(by: { p.sizes[$0] > p.sizes[$1] }) {
                     let size = Format.bytes(p.sizes[i])
-                    let mark = p.denied[i] ? "  (не всё доступно)" : ""
+                    let mark = p.denied[i] ? "  (partially inaccessible)" : ""
                     print(String(repeating: " ", count: max(0, 12 - size.count)) + size + "  " + scan.entries[i].name + mark)
                 }
                 let total = p.sizes.reduce(0, +)
-                print("Итого: \(Format.bytes(total)) (\(total) байт) за \(String(format: "%.2f", elapsed)) с")
+                print("Total: \(Format.bytes(total)) (\(total) bytes) in \(String(format: "%.2f", elapsed)) s")
                 exit(0)
             }
             RunLoop.main.add(timer, forMode: .common)

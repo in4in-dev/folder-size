@@ -1,7 +1,7 @@
 import CoreServices
 import Foundation
 
-/// Изменения файловой системы через FSEvents (уровень папок, с задержкой 1 с).
+/// File system changes via FSEvents (folder level, 1 s latency).
 final class FSWatcher {
     var onEvents: (([String]) -> Void)?
     private var stream: FSEventStreamRef?

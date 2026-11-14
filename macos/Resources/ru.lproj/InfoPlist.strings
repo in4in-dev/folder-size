@@ -1,0 +1,2 @@
+"CFBundleDisplayName" = "Размеры в Finder";
+"NSAppleEventsUsageDescription" = "Нужно, чтобы узнать, какая папка открыта в окне Finder, и открывать папки по двойному клику в панели.";

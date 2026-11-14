@@ -1,13 +1,13 @@
 import AppKit
 import SwiftUI
 
-/// Панель, которая никогда не забирает фокус у Finder.
+/// A panel that never takes focus away from Finder.
 final class SizePanel: NSPanel {
     override var canBecomeKey: Bool { false }
     override var canBecomeMain: Bool { false }
 }
 
-/// Клик по неактивной панели сразу доходит до строки, без «первого клика для фокуса».
+/// A click on the inactive panel reaches the row right away, without a "focus click" first.
 final class FirstMouseHostingView<Content: View>: NSHostingView<Content> {
     override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
 }
@@ -38,8 +38,8 @@ final class PanelController {
         panel.contentView = hosting
     }
 
-    /// Ставит панель вплотную справа от окна Finder. Если справа нет места
-    /// (окно растянуто по ширине) — панель прячется.
+    /// Places the panel right next to the Finder window. If there is no room on the right
+    /// (the window spans the screen width), the panel is hidden.
     func place(nextTo frame: CGRect, height: CGFloat, windowNumber: Int?, reorder: Bool) {
         let center = CGPoint(x: frame.midX, y: frame.midY)
         guard let screen = NSScreen.screens.first(where: { $0.frame.contains(center) }) ?? NSScreen.main else {

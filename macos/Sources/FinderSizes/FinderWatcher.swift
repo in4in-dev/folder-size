@@ -2,15 +2,15 @@ import AppKit
 import ApplicationServices
 
 struct FinderWindowState {
-    /// Координаты AX/CG: начало в левом верхнем углу главного экрана.
+    /// AX/CG coordinates: origin at the top-left corner of the main screen.
     let axFrame: CGRect
-    /// То же окно в координатах Cocoa (начало снизу слева).
+    /// The same window in Cocoa coordinates (origin at the bottom left).
     let frame: CGRect
     let isFullScreen: Bool
 }
 
-/// Следит за окнами Finder через Accessibility API и сообщает, когда окно
-/// сдвинулось (geometry) или могло смениться содержимое (content).
+/// Watches Finder windows via the Accessibility API and reports when a window
+/// has moved (geometry) or its contents may have changed (content).
 final class FinderWatcher {
     enum Change { case geometry, content }
 
@@ -57,8 +57,8 @@ final class FinderWatcher {
         attachIfNeeded()
     }
 
-    /// Подключается к процессу Finder (заново — если Finder перезапустили или
-    /// разрешение на Универсальный доступ выдали уже после запуска).
+    /// Attaches to the Finder process (again if Finder was relaunched or
+    /// Accessibility access was granted after launch).
     func attachIfNeeded() {
         guard AXIsProcessTrusted(),
               let finder = NSRunningApplication.runningApplications(withBundleIdentifier: Self.bundleID).first
@@ -79,7 +79,7 @@ final class FinderWatcher {
         watchFocusedWindow()
     }
 
-    /// Переподписывается на перемещения текущего окна, если фокус ушёл в другое.
+    /// Re-subscribes to the current window's moves if focus switched to another window.
     func watchFocusedWindow() {
         guard let observer, let app else { return }
         let focused = Self.element(app, kAXFocusedWindowAttribute)
@@ -93,7 +93,7 @@ final class FinderWatcher {
         }
     }
 
-    /// Активное обычное окно Finder или nil (Finder не впереди, свёрнуто, «Свойства» и т.п.).
+    /// The active regular Finder window, or nil (Finder not frontmost, minimized, Get Info, etc.).
     func currentState() -> FinderWindowState? {
         guard finderIsFrontmost, let app, let win = Self.element(app, kAXFocusedWindowAttribute) else { return nil }
         if let subrole = Self.string(win, kAXSubroleAttribute), subrole != kAXStandardWindowSubrole { return nil }
@@ -108,7 +108,7 @@ final class FinderWatcher {
         return FinderWindowState(axFrame: ax, frame: frame, isFullScreen: Self.bool(win, "AXFullScreen") == true)
     }
 
-    /// Номер окна в Window Server — чтобы поставить панель прямо над окном Finder.
+    /// Window Server number of the window, used to order the panel right above the Finder window.
     func windowNumber(for axFrame: CGRect) -> Int? {
         let options: CGWindowListOption = [.optionOnScreenOnly, .excludeDesktopElements]
         guard let list = CGWindowListCopyWindowInfo(options, kCGNullWindowID) as? [[String: Any]] else { return nil }

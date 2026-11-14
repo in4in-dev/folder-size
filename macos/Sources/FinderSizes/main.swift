@@ -1,6 +1,6 @@
 import AppKit
 
-// `FinderSizes --scan <папка>` — посчитать папку в терминале без интерфейса (для проверки скорости).
+// `FinderSizes --scan <folder>`: count a folder in the terminal without UI (for speed checks).
 let args = CommandLine.arguments
 if let i = args.firstIndex(of: "--scan"), i + 1 < args.count {
     ScanCLI.run(path: args[i + 1])

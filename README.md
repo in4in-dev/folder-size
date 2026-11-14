@@ -1,62 +1,65 @@
 # Folder Size
 
-Показывает, сколько места занимает каждая папка и каждый файл, прямо рядом с окном файлового менеджера. Не нужно открывать «Свойства» или запускать отдельный анализатор диска: вы открыли папку, и сразу видно, что в ней самое тяжёлое.
+Shows how much space every folder and file takes, right next to your file manager window. No need to open "Get Info" or run a separate disk analyzer: open a folder and you instantly see what is heaviest inside it.
 
-- размер каждого вложенного элемента, отсортированный от большего к меньшему;
-- общий размер открытой папки и полоса долей;
-- сумма по выделенным элементам;
-- подсчёт в фоне, без блокировки, с автоматическим обновлением при изменении файлов.
+- size of every item in the folder, sorted from largest to smallest;
+- total size of the open folder with a share bar;
+- total of the selected items;
+- counting runs in the background and updates automatically when files change.
 
-| Платформа | Папка | Скачать |
-|-----------|-------|---------|
-| macOS 13+ (Apple Silicon) | [`macos/`](macos) | [FinderSizes-macOS-0.1.dmg](https://github.com/in4in-dev/folder-size/releases/download/macos-v0.1/FinderSizes-macOS-0.1.dmg) |
-| Windows | [`windows/`](windows) | в разработке |
+| Platform | Folder | Download |
+|----------|--------|----------|
+| macOS 13+ (Apple Silicon) | [`macos/`](macos) | [FinderSizes-macOS-0.2.dmg](https://github.com/in4in-dev/folder-size/releases/download/macos-v0.2/FinderSizes-macOS-0.2.dmg) |
+| Windows | [`windows/`](windows) | in development |
 
-Все версии лежат на странице [Releases](https://github.com/in4in-dev/folder-size/releases).
+All versions are on the [Releases](https://github.com/in4in-dev/folder-size/releases) page.
 
 ---
 
 ## macOS
 
-![Панель размеров рядом с окном Finder](macos/screenshots/panel.png)
+![Size panel next to a Finder window](macos/screenshots/panel.png)
 
-Справа от активного окна Finder появляется панель. Она двигается и меняет размер вместе с окном и не забирает у Finder фокус.
+A panel appears to the right of the active Finder window. It moves and resizes together with the window and never takes focus away from Finder.
 
-- **Клик** по строке выделяет этот элемент и в Finder, **⌘-клик** добавляет его к выделению, а внизу панели показывается сумма.
-- **Двойной клик** открывает папку в этом же окне, а файл в его программе.
-- Пока папка считается, рядом с размером стоит `≥`. Замок 🔒 значит, что часть содержимого недоступна без полного доступа к диску; клик по нему открывает нужный раздел настроек.
-- Если справа от окна нет места (окно растянуто на весь экран) или Finder в полноэкранном режиме, панель скрывается.
+- **Click** a row to select that item in Finder too; **⌘-click** adds it to the selection, and the panel footer shows the total.
+- **Double-click** opens a folder in the same window, or a file in its app.
+- `≥` next to a size means the folder is still being counted. A lock 🔒 means part of the contents is unreadable without Full Disk Access; click it to open the right settings pane.
+- The panel hides when there is no room to the right of the window or Finder is in full screen.
+- The interface follows the system language: English and Russian are supported.
 
-### Установка
+### Installation
 
-1. Скачайте [FinderSizes-macOS-0.1.dmg](https://github.com/in4in-dev/folder-size/releases/download/macos-v0.1/FinderSizes-macOS-0.1.dmg) со страницы [Releases](https://github.com/in4in-dev/folder-size/releases).
-2. Откройте DMG и перетащите **FinderSizes** в «Программы».
-3. Запустите приложение. Сборка не нотаризована, поэтому при первом запуске macOS может его заблокировать. Тогда откройте его правой кнопкой → «Открыть» или нажмите «Всё равно открыть» в «Системных настройках → Конфиденциальность и безопасность».
+1. Download [FinderSizes-macOS-0.2.dmg](https://github.com/in4in-dev/folder-size/releases/download/macos-v0.2/FinderSizes-macOS-0.2.dmg) from [Releases](https://github.com/in4in-dev/folder-size/releases).
+2. Open the DMG and drag **FinderSizes** onto **Applications**.
+3. Launch the app. The build is not notarized, so macOS may block it on first launch: right-click it → **Open**, or click **Open Anyway** in **System Settings → Privacy & Security**.
 
-У приложения нет значка в Dock. При первом запуске оно добавляется в объекты входа и потом стартует вместе с системой; отключить это можно в «Системных настройках → Основные → Объекты входа».
+The app has no Dock icon. On first launch it adds itself to login items and starts with the system afterwards; you can turn this off in **System Settings → General → Login Items**.
 
-### Разрешения
+### Permissions
 
-| Разрешение | Зачем |
-|------------|-------|
-| Универсальный доступ | следить за положением и размером окна Finder |
-| Автоматизация → Finder | узнать, какая папка открыта и что выделено, и открывать папки по двойному клику |
-| Полный доступ к диску (необязательно) | считать защищённые папки (Почта, Safari, Библиотеки и т. п.) целиком |
+| Permission | Why |
+|------------|-----|
+| Accessibility | track the position and size of the Finder window |
+| Automation → Finder | find out which folder is open and what is selected, open folders on double-click |
+| Full Disk Access (optional) | fully count protected folders (Mail, Safari, Library, etc.) |
 
-### Сборка из исходников
+### Building from source
 
-Нужны Xcode или Command Line Tools со Swift 5.9+.
+Requires Xcode or Command Line Tools with Swift 5.9+.
 
 ```bash
 cd macos
-./build.sh        # собрать build/FinderSizes.app
-./install.sh      # собрать, установить в /Applications и запустить
-./make-dmg.sh     # собрать установщик FinderSizes-macOS-<версия>.dmg в ~/Downloads
+./build.sh        # build build/FinderSizes.app
+./install.sh      # build, install into /Applications and launch
+./make-dmg.sh     # build the FinderSizes-macOS-<version>.dmg installer into ~/Downloads
 ```
 
-Скрипты подписывают приложение первым найденным сертификатом «Apple Development» (или тем, что указан в `SIGN_ID`), чтобы выданные разрешения не слетали после пересборки. Если сертификата нет, используется ad-hoc подпись.
+The scripts sign the app with the first "Apple Development" certificate found (or the one in `SIGN_ID`) so granted permissions survive rebuilds. Without a certificate an ad-hoc signature is used.
 
-Подсчёт без интерфейса, например для проверки скорости:
+Translations live in `macos/Resources/<lang>.lproj`. To add a language, copy `ru.lproj`, translate the strings and add the language code to `CFBundleLocalizations` in `macos/Resources/Info.plist`.
+
+Counting without the UI, e.g. to check speed:
 
 ```bash
 macos/build/FinderSizes.app/Contents/MacOS/FinderSizes --scan ~/Downloads
@@ -66,4 +69,4 @@ macos/build/FinderSizes.app/Contents/MacOS/FinderSizes --scan ~/Downloads
 
 ## Windows
 
-В разработке.
+In development.

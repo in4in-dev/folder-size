@@ -1,6 +1,6 @@
 import AppKit
 
-/// Связывает слежение за Finder, подсчёт и панель.
+/// Ties together Finder tracking, size counting and the panel.
 final class Coordinator: PanelActions {
     private let watcher = FinderWatcher()
     private let model = SizeModel()
@@ -21,8 +21,8 @@ final class Coordinator: PanelActions {
         fsWatcher.onEvents = { [weak self] paths in self?.model.filesChanged(paths) }
         fsWatcher.start()
 
-        // Подстраховка к уведомлениям AX: переход в папку с тем же именем,
-        // смена выделения в виде, где Finder не шлёт событий.
+        // Backup for AX notifications: navigating to a folder with the same name,
+        // selection changes in views where Finder sends no events.
         let timer = Timer(timeInterval: 0.7, repeats: true) { [weak self] _ in self?.poll() }
         RunLoop.main.add(timer, forMode: .common)
         pollTimer = timer
@@ -49,7 +49,7 @@ final class Coordinator: PanelActions {
             return
         }
         guard let folder = snapshot.folder else {
-            // Окно без обычной папки (Недавние, поиск) — подсчёт прошлой папки больше не нужен.
+            // Window without a regular folder (Recents, search): the previous folder's count is no longer needed.
             panel.hide()
             model.leaveFolder()
             return

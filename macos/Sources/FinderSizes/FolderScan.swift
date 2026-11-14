@@ -5,8 +5,8 @@ struct CachedSize {
     let partial: Bool
 }
 
-/// Подсчёт размеров элементов одной папки. Каждая подпапка на любой глубине —
-/// отдельная операция в общей очереди, поэтому дерево обходится на всех ядрах сразу.
+/// Computes sizes of the items in one folder. Each subfolder at any depth is
+/// a separate operation in a shared queue, so the tree is walked on all cores at once.
 final class FolderScan {
     struct Entry {
         let url: URL
@@ -17,11 +17,11 @@ final class FolderScan {
 
     struct Progress {
         var sizes: [Int64] = []
-        /// Сколько папок внутри элемента ещё не обойдено.
+        /// How many folders inside the item have not been walked yet.
         var pending: [Int] = []
-        /// В элементе были папки, которые не удалось прочитать.
+        /// The item contained folders that could not be read.
         var denied: [Bool] = []
-        /// Поколение подсчёта элемента: растёт при пересчёте, старые операции отбрасываются.
+        /// Count generation of the item: grows on recount, stale operations are dropped.
         var gens: [Int] = []
 
         var isFinished: Bool { !pending.contains { $0 > 0 } }
@@ -34,7 +34,7 @@ final class FolderScan {
     private static let keySet = Set(keys)
 
     let folder: URL
-    /// Заполняется один раз перед вызовом `ready`, дальше только читается.
+    /// Filled once before `ready` is called, read-only afterwards.
     private(set) var entries: [Entry] = []
 
     private var progress = Progress()
@@ -51,8 +51,8 @@ final class FolderScan {
         self.folder = folder
     }
 
-    /// Читает содержимое папки и запускает обход подпапок; `ready` — на главном потоке.
-    /// Подпапки из `cached` повторно не обходятся.
+    /// Reads the folder contents and starts walking subfolders; `ready` runs on the main thread.
+    /// Subfolders found in `cached` are not walked again.
     func start(cached: [String: CachedSize], ready: @escaping () -> Void) {
         queue.addOperation { [self] in
             let fm = FileManager.default
@@ -93,7 +93,7 @@ final class FolderScan {
         return progress
     }
 
-    /// Останавливает все операции; результаты больше не обновляются.
+    /// Stops all operations; results are no longer updated.
     func cancel() {
         lock.lock()
         cancelled = true
@@ -101,7 +101,7 @@ final class FolderScan {
         queue.cancelAllOperations()
     }
 
-    /// Пересчитать одну подпапку заново (внутри что-то поменялось).
+    /// Recounts a single subfolder (something inside it changed).
     func rescan(_ index: Int) {
         lock.lock()
         guard !cancelled, entries.indices.contains(index), entries[index].isDirectory else { lock.unlock(); return }
@@ -114,7 +114,7 @@ final class FolderScan {
         enqueue(entries[index].url, index: index, gen: gen)
     }
 
-    /// Перечитать размеры файлов верхнего уровня.
+    /// Re-reads the sizes of top-level files.
     func restatFiles() {
         queue.addOperation { [self] in
             for (i, entry) in entries.enumerated() where !entry.isDirectory {
@@ -152,7 +152,7 @@ final class FolderScan {
             for url in urls {
                 guard let rv = try? url.resourceValues(forKeys: Self.keySet) else { continue }
                 if rv.isDirectory == true && rv.isSymbolicLink != true {
-                    // Точки монтирования (другие диски, /System/Volumes/Data) не считаем.
+                    // Mount points (other disks, /System/Volumes/Data) are not counted.
                     if rv.isVolume != true { subdirs.append(url) }
                 } else {
                     bytes += Self.fileSize(rv)

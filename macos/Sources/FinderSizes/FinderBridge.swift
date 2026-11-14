@@ -1,12 +1,12 @@
 import AppKit
 
-/// Общение с Finder через Apple Events: какая папка открыта, что выделено,
-/// открыть папку в том же окне, выделить элементы.
+/// Talks to Finder via Apple Events: which folder is open, what is selected,
+/// opening a folder in the same window, selecting items.
 enum FinderBridge {
     struct Snapshot {
-        /// nil — у переднего окна нет обычной папки (Недавние, AirDrop, поиск, «Свойства»).
+        /// nil if the front window has no regular folder (Recents, AirDrop, search, Get Info).
         let folder: URL?
-        /// Пути выделенных элементов, без завершающего «/».
+        /// Paths of the selected items, without a trailing "/".
         let selection: Set<String>
     }
 
@@ -37,7 +37,7 @@ enum FinderBridge {
 
     private static var lastError: Int?
 
-    /// nil — Finder не ответил (например, не выдано разрешение на управление Finder).
+    /// nil if Finder did not respond (e.g. Automation permission for Finder was not granted).
     static func snapshot() -> Snapshot? {
         var error: NSDictionary?
         guard let result = snapshotScript?.executeAndReturnError(&error) else {
@@ -53,7 +53,7 @@ enum FinderBridge {
         return Snapshot(folder: folder, selection: selection)
     }
 
-    /// Открывает папку в переднем окне Finder — как двойной клик по ней.
+    /// Opens the folder in the front Finder window, like double-clicking it.
     static func open(folder path: String) {
         run("tell application \"Finder\" to set target of front Finder window to \(alias(path))")
     }
@@ -80,7 +80,7 @@ enum FinderBridge {
         guard code != lastError else { return }
         lastError = code
         if code == -1743 {
-            NSLog("FinderSizes: нет разрешения управлять Finder (Настройки → Конфиденциальность → Автоматизация)")
+            NSLog("FinderSizes: no permission to control Finder (System Settings → Privacy & Security → Automation)")
         } else {
             NSLog("FinderSizes: AppleScript error %@", error)
         }

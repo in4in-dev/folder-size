@@ -1,5 +1,5 @@
 #!/bin/bash
-# Собирает приложение, ставит его в /Applications (или ~/Applications, если нет прав) и запускает.
+# Builds the app, installs it into /Applications (or ~/Applications if not writable) and launches it.
 set -euo pipefail
 cd "$(dirname "$0")"
 
@@ -15,4 +15,4 @@ pkill -x FinderSizes || true
 rm -rf "$DEST/FinderSizes.app"
 cp -R build/FinderSizes.app "$DEST/"
 open "$DEST/FinderSizes.app"
-echo "Установлено: $DEST/FinderSizes.app"
+echo "Installed: $DEST/FinderSizes.app"

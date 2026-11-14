@@ -64,7 +64,7 @@ struct PanelView: View {
                     }
                     .buttonStyle(.plain)
                     .foregroundStyle(.orange)
-                    .help("Нет полного доступа к диску — часть папок посчитана не до конца")
+                    .help("No Full Disk Access — some folders were not fully counted")
                 }
                 if model.isComputing {
                     ProgressView().controlSize(.mini)
@@ -89,9 +89,9 @@ struct PanelView: View {
         let selected = model.selectedItems
         return HStack {
             if selected.isEmpty {
-                Text("Выделите — покажу сумму").foregroundStyle(.secondary)
+                Text("Select items to see their total").foregroundStyle(.secondary)
             } else {
-                Text("Выделено \(selected.count)")
+                Text("Selected: \(selected.count)")
                 Spacer()
                 Text(Format.bytes(selected.reduce(0) { $0 + $1.bytes }))
                     .fontWeight(.bold)
@@ -104,7 +104,7 @@ struct PanelView: View {
     }
 }
 
-/// Полоса долей: самые большие элементы — насыщеннее.
+/// Share bar: the largest items are drawn more saturated.
 struct ShareBar: View {
     private static let opacities: [Double] = [1, 0.78, 0.6, 0.46, 0.34, 0.24]
 
@@ -179,7 +179,7 @@ struct RowView: View {
         .simultaneousGesture(TapGesture().onEnded {
             actions.select(item, toggle: NSEvent.modifierFlags.contains(.command))
         })
-        .help(item.isFolder ? "Двойной клик — открыть в этом окне" : "Двойной клик — открыть")
+        .help(item.isFolder ? LocalizedStringKey("Double-click to open in this window") : LocalizedStringKey("Double-click to open"))
     }
 }
 
