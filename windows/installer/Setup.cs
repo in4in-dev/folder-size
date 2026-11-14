@@ -18,6 +18,11 @@ static class Setup
     static string Dir { get { return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"Programs\" + App); } }
     static string Shortcut { get { return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Programs), Title + ".lnk"); } }
 
+    // Язык — как у Windows: русский для ru, иначе английский.
+    static readonly bool Ru = (Environment.GetEnvironmentVariable("FOLDERSIZE_LANG")
+        ?? System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName).StartsWith("ru", StringComparison.OrdinalIgnoreCase);
+    static string T(string ru, string en) { return Ru ? ru : en; }
+
     [STAThread]
     static int Main(string[] args)
     {
@@ -30,14 +35,14 @@ static class Setup
         }
         catch (Exception e)
         {
-            if (!quiet) MessageBox.Show("Ошибка: " + e.Message, Title, MessageBoxButtons.OK, MessageBoxIcon.Error);
+            if (!quiet) MessageBox.Show(T("Ошибка: ", "Error: ") + e.Message, Title, MessageBoxButtons.OK, MessageBoxIcon.Error);
             return 1;
         }
     }
 
     static int Install(bool quiet)
     {
-        if (!quiet && MessageBox.Show("Установить " + Title + "?\n\nПапка: " + Dir, Title,
+        if (!quiet && MessageBox.Show(T("Установить ", "Install ") + Title + "?\n\n" + T("Папка: ", "Folder: ") + Dir, Title,
                 MessageBoxButtons.OKCancel, MessageBoxIcon.Question) != DialogResult.OK) return 2;
 
         StopApp();
@@ -68,14 +73,15 @@ static class Setup
         }
 
         Process.Start(exe);
-        if (!quiet) MessageBox.Show(Title + " установлена и запущена.\nЗначок — в области уведомлений.", Title,
+        if (!quiet) MessageBox.Show(Title + T(" установлена и запущена.\nЗначок — в области уведомлений.",
+                " is installed and running.\nLook for its icon in the notification area."), Title,
             MessageBoxButtons.OK, MessageBoxIcon.Information);
         return 0;
     }
 
     static int Uninstall(bool quiet)
     {
-        if (!quiet && MessageBox.Show("Удалить " + Title + "?", Title,
+        if (!quiet && MessageBox.Show(T("Удалить ", "Uninstall ") + Title + "?", Title,
                 MessageBoxButtons.OKCancel, MessageBoxIcon.Question) != DialogResult.OK) return 2;
 
         StopApp();
@@ -91,7 +97,7 @@ static class Setup
             "/c ping 127.0.0.1 -n 3 >nul & rd /s /q \"" + Dir + "\"")
             { CreateNoWindow = true, UseShellExecute = false, WorkingDirectory = Path.GetTempPath() });
 
-        if (!quiet) MessageBox.Show(Title + " удалена.", Title, MessageBoxButtons.OK, MessageBoxIcon.Information);
+        if (!quiet) MessageBox.Show(Title + T(" удалена.", " has been uninstalled."), Title, MessageBoxButtons.OK, MessageBoxIcon.Information);
         return 0;
     }
 

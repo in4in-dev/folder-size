@@ -71,7 +71,7 @@ namespace FolderSizePanel
 
             tray = new NotifyIcon();
             tray.Icon = MakeIcon();
-            tray.Text = "FolderSize — размеры папок в Проводнике";
+            tray.Text = L.T("FolderSize — размеры папок в Проводнике", "FolderSize — folder sizes in File Explorer");
             tray.Visible = true;
             tray.MouseDoubleClick += delegate { panel.SetShowPanel(!panel.ShowPanel); };
             tray.MouseUp += (o, e) => { if (e.Button == MouseButtons.Right) ShowTrayMenu(); };
@@ -81,14 +81,14 @@ namespace FolderSizePanel
         void ShowTrayMenu()
         {
             IntPtr m = Native.CreatePopupMenu();
-            Native.AppendMenu(m, panel.ShowPanel ? Native.MF_CHECKED : 0, (IntPtr)1, "Показывать панель");
-            Native.AppendMenu(m, Autostart.IsOn() ? Native.MF_CHECKED : 0, (IntPtr)2, "Запускать вместе с Windows");
+            Native.AppendMenu(m, panel.ShowPanel ? Native.MF_CHECKED : 0, (IntPtr)1, L.T("Показывать панель", "Show panel"));
+            Native.AppendMenu(m, Autostart.IsOn() ? Native.MF_CHECKED : 0, (IntPtr)2, L.T("Запускать вместе с Windows", "Start with Windows"));
             Native.AppendMenu(m, Native.MF_SEPARATOR, IntPtr.Zero, null);
-            Native.AppendMenu(m, panel.PreferRight ? Native.MF_CHECKED : 0, (IntPtr)3, "Панель справа от окна");
-            Native.AppendMenu(m, panel.PreferRight ? 0 : Native.MF_CHECKED, (IntPtr)4, "Панель слева от окна");
+            Native.AppendMenu(m, panel.PreferRight ? Native.MF_CHECKED : 0, (IntPtr)3, L.T("Панель справа от окна", "Panel on the right"));
+            Native.AppendMenu(m, panel.PreferRight ? 0 : Native.MF_CHECKED, (IntPtr)4, L.T("Панель слева от окна", "Panel on the left"));
             Native.AppendMenu(m, Native.MF_SEPARATOR, IntPtr.Zero, null);
-            Native.AppendMenu(m, 0, (IntPtr)5, "Сбросить кэш размеров");
-            Native.AppendMenu(m, 0, (IntPtr)6, "Выход");
+            Native.AppendMenu(m, 0, (IntPtr)5, L.T("Сбросить кэш размеров", "Clear size cache"));
+            Native.AppendMenu(m, 0, (IntPtr)6, L.T("Выход", "Exit"));
             var pt = Cursor.Position;
             Native.SetForegroundWindow(panel.Handle);
             int cmd = Native.TrackPopupMenuEx(m, Native.TPM_RETURNCMD | Native.TPM_RIGHTBUTTON | Native.TPM_BOTTOMALIGN, pt.X, pt.Y, panel.Handle, IntPtr.Zero);
@@ -183,7 +183,7 @@ namespace FolderSizePanel
             string xml =
                 "<?xml version=\"1.0\" encoding=\"UTF-16\"?>\n" +
                 "<Task version=\"1.2\" xmlns=\"http://schemas.microsoft.com/windows/2004/02/mit/task\">\n" +
-                "  <RegistrationInfo><Description>FolderSize — размеры папок в Проводнике</Description></RegistrationInfo>\n" +
+                "  <RegistrationInfo><Description>FolderSize — folder sizes in File Explorer</Description></RegistrationInfo>\n" +
                 "  <Triggers><LogonTrigger><Enabled>true</Enabled><UserId>" + Esc(user) + "</UserId></LogonTrigger></Triggers>\n" +
                 "  <Principals><Principal id=\"Author\"><UserId>" + Esc(user) + "</UserId><LogonType>InteractiveToken</LogonType><RunLevel>LeastPrivilege</RunLevel></Principal></Principals>\n" +
                 "  <Settings>\n" +
@@ -229,27 +229,41 @@ namespace FolderSizePanel
         }
     }
 
+    // Язык интерфейса — как у Windows: русский для ru, иначе английский. Числа — в формате региональных настроек.
+    // Переменная окружения FOLDERSIZE_LANG=en|ru принудительно задаёт язык (для проверки).
+    static class L
+    {
+        public static readonly bool Ru = (Environment.GetEnvironmentVariable("FOLDERSIZE_LANG") ?? CultureInfo.CurrentUICulture.TwoLetterISOLanguageName)
+            .StartsWith("ru", StringComparison.OrdinalIgnoreCase);
+        public static string T(string ru, string en) { return Ru ? ru : en; }
+    }
+
     static class Fmt
     {
-        static readonly CultureInfo Ru = new CultureInfo("ru-RU");
+        static readonly CultureInfo Num = CultureInfo.CurrentCulture;
         public static string Size(long b)
         {
             if (b < 0) return "…";
             double tb = b / 1099511627776.0;
-            if (tb >= 1) return tb.ToString("0.00", Ru) + " ТБ";
+            if (tb >= 1) return tb.ToString("0.00", Num) + L.T(" ТБ", " TB");
             double gb = b / 1073741824.0;
-            if (gb >= 1) return gb.ToString(gb >= 100 ? "0" : "0.0", Ru) + " ГБ";
+            if (gb >= 1) return gb.ToString(gb >= 100 ? "0" : "0.0", Num) + L.T(" ГБ", " GB");
             double mb = b / 1048576.0;
-            if (mb >= 1) return mb.ToString(mb >= 100 ? "0" : "0.0", Ru) + " МБ";
+            if (mb >= 1) return mb.ToString(mb >= 100 ? "0" : "0.0", Num) + L.T(" МБ", " MB");
             double kb = b / 1024.0;
-            if (kb >= 1) return Math.Round(kb).ToString("0", Ru) + " КБ";
-            return b + " Б";
+            if (kb >= 1) return Math.Round(kb).ToString("0", Num) + L.T(" КБ", " KB");
+            return b + L.T(" Б", " B");
         }
-        public static string Plural(int n, string one, string few, string many)
+        public static string Plural(int n, string one, string few, string many, string enOne, string enMany)
         {
-            int m10 = n % 10, m100 = n % 100;
-            string w = (m10 == 1 && m100 != 11) ? one : (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) ? few : many;
-            return n.ToString("N0", Ru) + " " + w;
+            string w;
+            if (L.Ru)
+            {
+                int m10 = n % 10, m100 = n % 100;
+                w = (m10 == 1 && m100 != 11) ? one : (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) ? few : many;
+            }
+            else w = n == 1 ? enOne : enMany;
+            return n.ToString("N0", Num) + " " + w;
         }
     }
 
@@ -701,6 +715,8 @@ namespace FolderSizePanel
                 targetPid = pid;
                 hookLoc = Native.SetWinEventHook(0x800B, 0x800B, IntPtr.Zero, hookProc, pid, 0, 2);
             }
+            // Панель могла быть видна у другого окна — сразу переносим её к новому, не дожидаясь его перемещения.
+            Reposition();
             Poll();
             BringToTop();
         }
@@ -726,6 +742,7 @@ namespace FolderSizePanel
             {
                 Reposition();
                 Show();
+                Reposition();
                 BringToTop();
             }
             else if (fg == target && IsCovered()) BringToTop();
@@ -865,7 +882,7 @@ namespace FolderSizePanel
                     {
                         if (!d.IsReady) continue;
                         string root = d.RootDirectory.FullName;
-                        string label = string.IsNullOrEmpty(d.VolumeLabel) ? (d.DriveType == DriveType.Network ? "Сетевой диск" : "Локальный диск") : d.VolumeLabel;
+                        string label = string.IsNullOrEmpty(d.VolumeLabel) ? (d.DriveType == DriveType.Network ? L.T("Сетевой диск", "Network Drive") : L.T("Локальный диск", "Local Disk")) : d.VolumeLabel;
                         list.Add(new Item
                         {
                             Name = label + " (" + root.TrimEnd('\\') + ")", FullPath = root, IsDir = true, IsDrive = true,
@@ -880,7 +897,7 @@ namespace FolderSizePanel
             {
                 SetupWatcher(null);
                 scanner.Cancel();
-                message = "Для этого места размеры не считаются";
+                message = L.T("Для этого места размеры не считаются", "Sizes are not calculated for this location");
                 diskTotal = -1;
             }
             else
@@ -890,7 +907,7 @@ namespace FolderSizePanel
                 IntPtr h = Native.FindFirstFileExW(Native.LongPath(path) + "\\*", 1, out fd, 0, IntPtr.Zero, 2);
                 if (h == Native.INVALID_HANDLE)
                 {
-                    message = Marshal.GetLastWin32Error() == 5 ? "Нет доступа к этой папке" : "Не удалось прочитать папку";
+                    message = Marshal.GetLastWin32Error() == 5 ? L.T("Нет доступа к этой папке", "Access to this folder is denied") : L.T("Не удалось прочитать папку", "Could not read this folder");
                 }
                 else
                 {
@@ -953,11 +970,11 @@ namespace FolderSizePanel
                 if (Native.GetDiskFreeSpaceEx(root, out free, out total, out totalFree))
                 {
                     diskFree = (long)free; diskTotal = (long)total;
-                    diskLabel = root.StartsWith("\\\\") ? root : "Диск " + root.TrimEnd('\\');
+                    diskLabel = root.StartsWith("\\\\") ? root : L.T("Диск ", "Drive ") + root.TrimEnd('\\');
                     if (!root.StartsWith("\\\\"))
                     {
                         var di = new DriveInfo(root);
-                        string lbl = string.IsNullOrEmpty(di.VolumeLabel) ? "Локальный диск" : di.VolumeLabel;
+                        string lbl = string.IsNullOrEmpty(di.VolumeLabel) ? L.T("Локальный диск", "Local Disk") : di.VolumeLabel;
                         diskLabel = lbl + " (" + root.TrimEnd('\\') + ")";
                     }
                 }
@@ -1009,11 +1026,11 @@ namespace FolderSizePanel
                 {
                     it.Bar = it.DriveTotal > 0 ? (float)it.Size / it.DriveTotal : 0;
                     it.SizeText = Fmt.Size(it.Size);
-                    it.PctText = "из " + Fmt.Size(it.DriveTotal);
+                    it.PctText = L.T("из ", "of ") + Fmt.Size(it.DriveTotal);
                     continue;
                 }
-                if (it.Link) { it.SizeText = "ссылка"; it.PctText = ""; it.Bar = 0; continue; }
-                if (it.Denied) { it.SizeText = "нет доступа"; it.PctText = ""; it.Bar = 0; continue; }
+                if (it.Link) { it.SizeText = L.T("ссылка", "link"); it.PctText = ""; it.Bar = 0; continue; }
+                if (it.Denied) { it.SizeText = L.T("нет доступа", "no access"); it.PctText = ""; it.Bar = 0; continue; }
                 if (it.Shown < 0)
                 {
                     it.SizeText = it.Live > 0 ? Fmt.Size(it.Live) + "…" : "…";
@@ -1124,8 +1141,8 @@ namespace FolderSizePanel
             DrawChevron(g, rCollapse, placedRight);
 
             int pad = S(16), y = sh + S(12);
-            string shown = isThisPC ? "Этот компьютер" : (curPath ?? "Откройте окно Проводника");
-            if (shown.StartsWith("::")) shown = "Особая папка";
+            string shown = isThisPC ? L.T("Этот компьютер", "This PC") : (curPath ?? L.T("Откройте окно Проводника", "Open a File Explorer window"));
+            if (shown.StartsWith("::")) shown = L.T("Особая папка", "Special folder");
             TextRenderer.DrawText(g, shown, fSmall, new Rectangle(pad, y, W - 2 * pad, S(18)), th.Sub, th.Bg, TF | TextFormatFlags.PathEllipsis);
             y += S(20);
 
@@ -1145,26 +1162,26 @@ namespace FolderSizePanel
             {
                 int sx = pad + tsz.Width + S(10), cy = y + tsz.Height / 2 + S(2);
                 DrawSpinner(g, sx, cy - S(6), S(12));
-                TextRenderer.DrawText(g, "ещё " + Fmt.Plural(pendingDirs, "папка", "папки", "папок"), fSmall,
+                TextRenderer.DrawText(g, L.T("ещё ", "") + Fmt.Plural(pendingDirs, "папка", "папки", "папок", "more folder", "more folders"), fSmall,
                     new Rectangle(sx + S(18), cy - S(9), W - sx - S(18) - pad, S(18)), th.Sub, th.Bg, TF | TextFormatFlags.EndEllipsis);
             }
             y += S(34);
-            string counts = isThisPC ? Fmt.Plural(items.Count, "диск", "диска", "дисков")
-                : Fmt.Plural(nDirs, "папка", "папки", "папок") + ", " + Fmt.Plural(nFiles, "файл", "файла", "файлов");
+            string counts = isThisPC ? Fmt.Plural(items.Count, "диск", "диска", "дисков", "drive", "drives")
+                : Fmt.Plural(nDirs, "папка", "папки", "папок", "folder", "folders") + ", " + Fmt.Plural(nFiles, "файл", "файла", "файлов", "file", "files");
             TextRenderer.DrawText(g, counts, fSmall, new Rectangle(pad, y, W - 2 * pad, S(18)), th.Sub, th.Bg, TF);
             y += S(26);
 
             if (!isThisPC)
             {
-                int w1 = TextRenderer.MeasureText("По размеру", fSmall).Width + S(20);
-                int w2 = TextRenderer.MeasureText("По имени", fSmall).Width + S(20);
+                int w1 = TextRenderer.MeasureText(L.T("По размеру", "By size"), fSmall).Width + S(20);
+                int w2 = TextRenderer.MeasureText(L.T("По имени", "By name"), fSmall).Width + S(20);
                 var seg = new Rectangle(pad, y, w1 + w2 + S(6), S(28));
                 FillRound(g, th.SegBg, seg, S(6));
                 rSortSize = new Rectangle(seg.X + S(2), seg.Y + S(2), w1, seg.Height - S(4));
                 rSortName = new Rectangle(rSortSize.Right + S(2), rSortSize.Y, w2, rSortSize.Height);
                 FillRound(g, th.SegOn, sortByName ? rSortName : rSortSize, S(4));
-                TextRenderer.DrawText(g, "По размеру", fSmall, rSortSize, sortByName ? th.Sub : th.Text, TF | TextFormatFlags.HorizontalCenter);
-                TextRenderer.DrawText(g, "По имени", fSmall, rSortName, sortByName ? th.Text : th.Sub, TF | TextFormatFlags.HorizontalCenter);
+                TextRenderer.DrawText(g, L.T("По размеру", "By size"), fSmall, rSortSize, sortByName ? th.Sub : th.Text, TF | TextFormatFlags.HorizontalCenter);
+                TextRenderer.DrawText(g, L.T("По имени", "By name"), fSmall, rSortName, sortByName ? th.Text : th.Sub, TF | TextFormatFlags.HorizontalCenter);
                 y += S(40);
             }
             else { rSortSize = rSortName = Rectangle.Empty; y += S(6); }
@@ -1230,7 +1247,7 @@ namespace FolderSizePanel
                 TextRenderer.DrawText(g, it.Name, fText, new Rectangle(nameX, ry, Math.Max(0, nameR - nameX), rh - S(2)), th.Text, bg, TF | TextFormatFlags.EndEllipsis);
             }
             if (view.Count == 0 && curPath != null)
-                TextRenderer.DrawText(g, "Папка пуста", fText, new Rectangle(0, rList.Y + S(24), W, S(24)), th.Sub, th.Bg, TF | TextFormatFlags.HorizontalCenter);
+                TextRenderer.DrawText(g, L.T("Папка пуста", "This folder is empty"), fText, new Rectangle(0, rList.Y + S(24), W, S(24)), th.Sub, th.Bg, TF | TextFormatFlags.HorizontalCenter);
             g.Restore(state);
 
             if (hasBar)
@@ -1250,7 +1267,7 @@ namespace FolderSizePanel
             int fh = S(FooterH), y = H - fh;
             HLine(g, th.Line, 0, W, y);
             int pad = S(16);
-            string right = "свободно " + Fmt.Size(diskFree) + " из " + Fmt.Size(diskTotal);
+            string right = L.T("свободно ", "") + Fmt.Size(diskFree) + L.T(" из ", " free of ") + Fmt.Size(diskTotal);
             int rw = TextRenderer.MeasureText(right, fSmall).Width + S(2);
             TextRenderer.DrawText(g, diskLabel ?? "", fSmall, new Rectangle(pad, y + S(8), W - 2 * pad - rw - S(8), S(18)), th.Sub, th.Bg, TF | TextFormatFlags.EndEllipsis);
             TextRenderer.DrawText(g, right, fSmall, new Rectangle(W - pad - rw, y + S(8), rw, S(18)), th.Sub, th.Bg, TF | TextFormatFlags.Right);
@@ -1502,10 +1519,10 @@ namespace FolderSizePanel
                 hMenu = Native.CreatePopupMenu();
                 if (it.IsDir)
                 {
-                    Native.AppendMenu(hMenu, 0, (IntPtr)CmdNewWindow, "Открыть в новом окне");
-                    if (!it.IsDrive && !it.Link) Native.AppendMenu(hMenu, 0, (IntPtr)CmdRescan, "Пересчитать размер");
+                    Native.AppendMenu(hMenu, 0, (IntPtr)CmdNewWindow, L.T("Открыть в новом окне", "Open in new window"));
+                    if (!it.IsDrive && !it.Link) Native.AppendMenu(hMenu, 0, (IntPtr)CmdRescan, L.T("Пересчитать размер", "Recalculate size"));
                 }
-                Native.AppendMenu(hMenu, 0, (IntPtr)CmdCopy, "Копировать путь");
+                Native.AppendMenu(hMenu, 0, (IntPtr)CmdCopy, L.T("Копировать путь", "Copy path"));
                 Native.AppendMenu(hMenu, Native.MF_SEPARATOR, IntPtr.Zero, null);
 
                 uint sfgao;
