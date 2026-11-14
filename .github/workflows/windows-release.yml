@@ -1,0 +1,46 @@
+# Builds the Windows installer and publishes it to Releases.
+# Run: git tag windows-v0.2 && git push origin windows-v0.2
+name: Windows release
+
+on:
+  push:
+    tags: ['windows-v*']
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version (e.g. 0.2). Tag windows-v<version> will be created'
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Version
+        id: ver
+        shell: pwsh
+        run: |
+          $v = if ('${{ github.event_name }}' -eq 'workflow_dispatch') { '${{ inputs.version }}' } else { '${{ github.ref_name }}' -replace '^windows-v', '' }
+          "version=$v" >> $env:GITHUB_OUTPUT
+
+      - name: Build
+        shell: pwsh
+        run: ./windows/build.ps1 -Version ${{ steps.ver.outputs.version }}
+
+      - name: Name installer with version
+        shell: pwsh
+        run: Copy-Item windows/bin/FolderSizePanel-Setup.exe "FolderSizePanel-Setup-${{ steps.ver.outputs.version }}.exe"
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: windows-v${{ steps.ver.outputs.version }}
+          name: Windows ${{ steps.ver.outputs.version }}
+          body: |
+            Folder Size Panel installer for Windows 10/11.
+            Download `FolderSizePanel-Setup-${{ steps.ver.outputs.version }}.exe` and run it — no administrator rights needed.
+          files: FolderSizePanel-Setup-${{ steps.ver.outputs.version }}.exe

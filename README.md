@@ -10,7 +10,7 @@ Shows how much space every folder and file takes, right next to your file manage
 | Platform | Folder | Download |
 |----------|--------|----------|
 | macOS 13+ (Apple Silicon) | [`macos/`](macos) | [FinderSizes-macOS-0.2.dmg](https://github.com/in4in-dev/folder-size/releases/download/macos-v0.2/FinderSizes-macOS-0.2.dmg) |
-| Windows | [`windows/`](windows) | in development |
+| Windows 10/11 | [`windows/`](windows) | [FolderSizePanel-Setup-0.1.exe](https://github.com/in4in-dev/folder-size/releases/download/windows-v0.1/FolderSizePanel-Setup-0.1.exe) |
 
 All versions are on the [Releases](https://github.com/in4in-dev/folder-size/releases) page.
 
@@ -69,4 +69,4 @@ macos/build/FinderSizes.app/Contents/MacOS/FinderSizes --scan ~/Downloads
 
 ## Windows
 
-In development.
+![Size panel next to a File Explorer window](windows/screenshots/panel.png)
